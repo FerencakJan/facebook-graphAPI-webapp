@@ -23,7 +23,7 @@ RUN curl -sS https://getcomposer.org/installer | php && \
 COPY . .
 
 # Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Start Symfony app using PHP's built-in server
 CMD php -S 0.0.0.0:8000 -t public
