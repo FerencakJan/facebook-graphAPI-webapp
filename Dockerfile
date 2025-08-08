@@ -1,27 +1,38 @@
-FROM php:8.3-cli
+# Use official PHP image with required extensions
+FROM php:8.2-cli
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libicu-dev zlib1g-dev libonig-dev curl \
-    && docker-php-ext-install intl pdo pdo_mysql zip opcache
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+    unzip \
+    git \
+    curl \
+    libicu-dev \
+    libonig-dev \
+    libzip-dev \
+    zip \
+    libpq-dev \
+    && docker-php-ext-install intl pdo pdo_mysql opcache zip
 
 # Set working directory
 WORKDIR /app
 
-# Copy all files
+# Copy project files
 COPY . .
 
-# Allow Composer to run as root
-ENV COMPOSER_ALLOW_SUPERUSER=1
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer
 
-# Install PHP dependencies including scripts
+# Allow Composer plugins and root usage (important for Render)
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV SYMFONY_ALLOW_APP_DEV=true
+ENV APP_ENV=prod
+
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Expose port (if using PHP dev server)
+# Expose port (optional, for local testing)
 EXPOSE 8000
 
-# Start Symfony with PHP's built-in web server
+# Start Symfony app using PHP’s built-in server
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
