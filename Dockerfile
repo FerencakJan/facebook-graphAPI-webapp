@@ -1,26 +1,29 @@
-# Use official PHP image with CLI tools
+# Dockerfile
 FROM php:8.2-cli
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Install Composer from official Composer image
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Copy the entire Symfony project into the container
-COPY . .
-
-# Install required PHP extensions for Symfony and Doctrine
+# Install dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     unzip \
     zip \
+    curl \
+    git \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Install PHP dependencies using Composer
+# Install Composer manually
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer
+
+# Copy app source code
+COPY . .
+
+# Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Start the Symfony app with PHP's built-in web server
+# Start Symfony app using PHP's built-in server
 CMD php -S 0.0.0.0:8000 -t public
